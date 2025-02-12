@@ -1,4 +1,3 @@
-
 import { useState, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -14,6 +13,7 @@ import SignaturePad from "@/components/finding-form/SignaturePad";
 import DateSelector from "@/components/finding-form/DateSelector";
 import PersonSelector from "@/components/finding-form/PersonSelector";
 import SuccessDialog from "@/components/finding-form/SuccessDialog";
+import { format } from "date-fns";
 
 const supervisors = [
   "Juan Pérez",
@@ -52,7 +52,7 @@ const NewFinding = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (isSubmitting) return;
+    if (isSubmitting || !startDate || !endDate) return;
     setIsSubmitting(true);
 
     try {
@@ -104,8 +104,8 @@ const NewFinding = () => {
           equipment,
           horometer: parseInt(horometer),
           maintenance_type: maintenanceType,
-          start_date: startDate?.toISOString(),
-          end_date: endDate?.toISOString(),
+          start_date: format(startDate, 'yyyy-MM-dd'),
+          end_date: format(endDate, 'yyyy-MM-dd'),
           supervisor,
           technician,
           description,
