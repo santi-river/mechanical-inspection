@@ -6,15 +6,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { format } from "date-fns";
-import { cn } from "@/lib/utils";
-import { Calendar as CalendarIcon } from "lucide-react";
 import SignatureCanvas from "react-signature-canvas";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import FileUpload from "@/components/finding-form/FileUpload";
+import SignaturePad from "@/components/finding-form/SignaturePad";
+import DateSelector from "@/components/finding-form/DateSelector";
+import PersonSelector from "@/components/finding-form/PersonSelector";
+import SuccessDialog from "@/components/finding-form/SuccessDialog";
 
 const supervisors = [
   "Juan Pérez",
@@ -37,7 +36,6 @@ const NewFinding = () => {
   const [showSuccess, setShowSuccess] = useState(false);
   const [startDate, setStartDate] = useState<Date>();
   const [endDate, setEndDate] = useState<Date>();
-  const [signature, setSignature] = useState<any>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -183,106 +181,38 @@ const NewFinding = () => {
           </Select>
         </div>
 
-        <div className="space-y-2">
-          <Label>Fecha de inicio</Label>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                className={cn(
-                  "w-full justify-start text-left font-normal",
-                  !startDate && "text-muted-foreground"
-                )}
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {startDate ? format(startDate, "PPP") : "Seleccionar fecha"}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0">
-              <Calendar
-                mode="single"
-                selected={startDate}
-                onSelect={setStartDate}
-                initialFocus
-              />
-            </PopoverContent>
-          </Popover>
-        </div>
+        <DateSelector
+          label="Fecha de inicio"
+          date={startDate}
+          setDate={setStartDate}
+        />
 
-        <div className="space-y-2">
-          <Label>Fecha de fin</Label>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                className={cn(
-                  "w-full justify-start text-left font-normal",
-                  !endDate && "text-muted-foreground"
-                )}
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {endDate ? format(endDate, "PPP") : "Seleccionar fecha"}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0">
-              <Calendar
-                mode="single"
-                selected={endDate}
-                onSelect={setEndDate}
-                initialFocus
-              />
-            </PopoverContent>
-          </Popover>
-        </div>
+        <DateSelector
+          label="Fecha de fin"
+          date={endDate}
+          setDate={setEndDate}
+        />
 
-        <div className="space
+        <PersonSelector
+          label="Supervisor"
+          value={supervisor}
+          onChange={setSupervisor}
+          options={supervisors}
+          placeholder="Seleccionar supervisor"
+        />
 
--y-2">
-          <Label htmlFor="supervisor">Supervisor</Label>
-          <Select value={supervisor} onValueChange={setSupervisor}>
-            <SelectTrigger>
-              <SelectValue placeholder="Seleccionar supervisor" />
-            </SelectTrigger>
-            <SelectContent>
-              {supervisors.map((s) => (
-                <SelectItem key={s} value={s}>
-                  {s}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        <PersonSelector
+          label="Técnico"
+          value={technician}
+          onChange={setTechnician}
+          options={technicians}
+          placeholder="Seleccionar técnico"
+        />
 
-        <div className="space-y-2">
-          <Label htmlFor="technician">Técnico</Label>
-          <Select value={technician} onValueChange={setTechnician}>
-            <SelectTrigger>
-              <SelectValue placeholder="Seleccionar técnico" />
-            </SelectTrigger>
-            <SelectContent>
-              {technicians.map((t) => (
-                <SelectItem key={t} value={t}>
-                  {t}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="file">Archivo (foto o video)</Label>
-          <Input
-            id="file"
-            type="file"
-            accept="image/*,video/*"
-            onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
-          />
-          {selectedFile && (
-            <p className="text-sm text-muted-foreground">
-              Archivo seleccionado: {selectedFile.name}
-            </p>
-          )}
-        </div>
+        <FileUpload
+          selectedFile={selectedFile}
+          setSelectedFile={setSelectedFile}
+        />
 
         <div className="space-y-2">
           <Label htmlFor="description">Descripción</Label>
@@ -296,25 +226,7 @@ const NewFinding = () => {
           />
         </div>
 
-        <div className="space-y-2">
-          <Label>Firma del inspector</Label>
-          <div className="border rounded-md p-2 bg-white">
-            <SignatureCanvas
-              ref={signatureRef}
-              canvasProps={{
-                className: "w-full h-40 border rounded",
-              }}
-            />
-          </div>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => signatureRef.current?.clear()}
-            className="w-full mt-2"
-          >
-            Limpiar firma
-          </Button>
-        </div>
+        <SignaturePad signatureRef={signatureRef} />
 
         <div className="flex space-x-4 pt-4">
           <Button
@@ -332,20 +244,14 @@ const NewFinding = () => {
         </div>
       </form>
 
-      <Dialog open={showSuccess} onOpenChange={setShowSuccess}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>¡Hallazgo guardado con éxito!</DialogTitle>
-          </DialogHeader>
-          <p>El hallazgo ha sido registrado correctamente en el sistema.</p>
-          <Button onClick={() => {
-            setShowSuccess(false);
-            navigate("/");
-          }}>
-            Aceptar
-          </Button>
-        </DialogContent>
-      </Dialog>
+      <SuccessDialog 
+        open={showSuccess}
+        onOpenChange={setShowSuccess}
+        onConfirm={() => {
+          setShowSuccess(false);
+          navigate("/");
+        }}
+      />
     </div>
   );
 };
