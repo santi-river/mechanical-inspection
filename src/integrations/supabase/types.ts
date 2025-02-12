@@ -24,6 +24,57 @@ export type Database = {
         }
         Relationships: []
       }
+      findings: {
+        Row: {
+          checklist_name: string
+          created_at: string
+          description: string
+          end_date: string
+          equipment: string
+          file_url: string | null
+          horometer: number
+          id: string
+          inspection_type: string
+          maintenance_type: string
+          signature_url: string | null
+          start_date: string
+          supervisor: string
+          technician: string
+        }
+        Insert: {
+          checklist_name: string
+          created_at?: string
+          description: string
+          end_date: string
+          equipment: string
+          file_url?: string | null
+          horometer: number
+          id?: string
+          inspection_type: string
+          maintenance_type: string
+          signature_url?: string | null
+          start_date: string
+          supervisor: string
+          technician: string
+        }
+        Update: {
+          checklist_name?: string
+          created_at?: string
+          description?: string
+          end_date?: string
+          equipment?: string
+          file_url?: string | null
+          horometer?: number
+          id?: string
+          inspection_type?: string
+          maintenance_type?: string
+          signature_url?: string | null
+          start_date?: string
+          supervisor?: string
+          technician?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
