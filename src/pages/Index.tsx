@@ -1,5 +1,5 @@
 
-import { Wrench, Droplet, Circle, Tool } from "lucide-react";
+import { Wrench, Droplet, Circle, Cylinder } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 
@@ -19,7 +19,7 @@ const Index = () => {
     },
     {
       title: "Cilindros Hidráulicos",
-      icon: <Tool size={32} />,
+      icon: <Cylinder size={32} />,
       color: "bg-red-50",
     },
     {
