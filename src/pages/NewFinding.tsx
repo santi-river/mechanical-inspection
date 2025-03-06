@@ -1,3 +1,4 @@
+
 import { useState, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -52,7 +53,19 @@ const NewFinding = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (isSubmitting || !startDate || !endDate) return;
+    
+    // Validation checks
+    if (!checklist || !equipment || !horometer || !maintenanceType || !description || 
+        !supervisor || !technician || !startDate || !endDate) {
+      toast({
+        title: "Error",
+        description: "Por favor complete todos los campos requeridos.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    if (isSubmitting) return;
     setIsSubmitting(true);
 
     try {
@@ -96,8 +109,13 @@ const NewFinding = () => {
         fileUrl = filePublicUrl;
       }
 
+      console.log("Saving finding with dates:", {
+        start_date: startDate ? format(startDate, 'yyyy-MM-dd') : null,
+        end_date: endDate ? format(endDate, 'yyyy-MM-dd') : null
+      });
+
       // Save finding data
-      const { error: insertError } = await supabase
+      const { data, error: insertError } = await supabase
         .from('findings')
         .insert({
           checklist_name: checklist,
@@ -112,10 +130,12 @@ const NewFinding = () => {
           signature_url: signatureUrl,
           file_url: fileUrl,
           inspection_type: location.state?.type || "No especificado"
-        });
+        })
+        .select();
 
       if (insertError) throw insertError;
 
+      console.log("Finding saved successfully:", data);
       setShowSuccess(true);
       toast({
         title: "Éxito",
@@ -170,7 +190,7 @@ const NewFinding = () => {
 
         <div className="space-y-2">
           <Label htmlFor="maintenanceType">Tipo de mantenimiento</Label>
-          <Select value={maintenanceType} onValueChange={setMaintenanceType}>
+          <Select value={maintenanceType} onValueChange={setMaintenanceType} required>
             <SelectTrigger>
               <SelectValue placeholder="Seleccionar tipo" />
             </SelectTrigger>
