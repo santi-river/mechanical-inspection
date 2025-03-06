@@ -85,7 +85,10 @@ const NewFinding = () => {
             contentType: 'image/png',
           });
 
-        if (signatureError) throw signatureError;
+        if (signatureError) {
+          console.error("Error uploading signature:", signatureError);
+          throw signatureError;
+        }
         
         const { data: { publicUrl: signaturePublicUrl } } = supabase.storage
           .from('findings')
@@ -100,7 +103,10 @@ const NewFinding = () => {
           .from('findings')
           .upload(`files/${Date.now()}-${selectedFile.name}`, selectedFile);
 
-        if (fileError) throw fileError;
+        if (fileError) {
+          console.error("Error uploading file:", fileError);
+          throw fileError;
+        }
 
         const { data: { publicUrl: filePublicUrl } } = supabase.storage
           .from('findings')
@@ -109,31 +115,43 @@ const NewFinding = () => {
         fileUrl = filePublicUrl;
       }
 
+      // Format dates properly for database (YYYY-MM-DD)
+      const formattedStartDate = startDate ? format(startDate, 'yyyy-MM-dd') : null;
+      const formattedEndDate = endDate ? format(endDate, 'yyyy-MM-dd') : null;
+
       console.log("Saving finding with dates:", {
-        start_date: startDate ? format(startDate, 'yyyy-MM-dd') : null,
-        end_date: endDate ? format(endDate, 'yyyy-MM-dd') : null
+        start_date: formattedStartDate,
+        end_date: formattedEndDate
       });
+
+      // Prepare data for insert
+      const findingData = {
+        checklist_name: checklist,
+        equipment,
+        horometer: parseInt(horometer),
+        maintenance_type: maintenanceType,
+        start_date: formattedStartDate,
+        end_date: formattedEndDate,
+        supervisor,
+        technician,
+        description,
+        signature_url: signatureUrl,
+        file_url: fileUrl,
+        inspection_type: location.state?.type || "No especificado"
+      };
+
+      console.log("Submitting finding data:", findingData);
 
       // Save finding data
       const { data, error: insertError } = await supabase
         .from('findings')
-        .insert({
-          checklist_name: checklist,
-          equipment,
-          horometer: parseInt(horometer),
-          maintenance_type: maintenanceType,
-          start_date: format(startDate, 'yyyy-MM-dd'),
-          end_date: format(endDate, 'yyyy-MM-dd'),
-          supervisor,
-          technician,
-          description,
-          signature_url: signatureUrl,
-          file_url: fileUrl,
-          inspection_type: location.state?.type || "No especificado"
-        })
+        .insert(findingData)
         .select();
 
-      if (insertError) throw insertError;
+      if (insertError) {
+        console.error('Supabase insert error:', insertError);
+        throw insertError;
+      }
 
       console.log("Finding saved successfully:", data);
       setShowSuccess(true);
@@ -141,11 +159,11 @@ const NewFinding = () => {
         title: "Éxito",
         description: "El hallazgo ha sido guardado correctamente.",
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving finding:', error);
       toast({
         title: "Error",
-        description: "Hubo un error al guardar el hallazgo. Por favor, intente nuevamente.",
+        description: error.message || "Hubo un error al guardar el hallazgo. Por favor, intente nuevamente.",
         variant: "destructive"
       });
     } finally {
